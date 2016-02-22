@@ -13,7 +13,7 @@ namespace ADRenamer
 {
     public partial class Form1 : Form
     {
-        public string LDAP_scope = "";
+        public string LDAP_scope = "LDAP://OU=MLA,DC=MCO,DC=local";
         public string profile_folder = "";
         public string userfile_folder = "";
 
@@ -24,7 +24,27 @@ namespace ADRenamer
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //MessageBox.Show(getLoginName(textBox1.Text));
 
+            //MessageBox.Show()
+        }
+
+        public string getLoginName(string displayName)
+        {
+            using (DirectoryEntry de = new DirectoryEntry(LDAP_scope))
+            {
+                using (DirectorySearcher ds = new DirectorySearcher(de))
+                {
+                    ds.Filter = string.Format("(&(objectcategory=user)({0}={1}))", "displayName", displayName);
+
+                    SearchResult result = ds.FindOne();
+
+                    using (DirectoryEntry uEntry = result.GetDirectoryEntry())
+                    {
+                        return (uEntry.Properties["givenName"].Value.ToString()[0] + "." + uEntry.Properties["sn"].Value.ToString()).ToLower();
+                    }
+                }
+            }
         }
 
         public void setUserProperties(string displayName, ADUserProperties Properties)
@@ -49,7 +69,6 @@ namespace ADRenamer
                         //Path values
                         uEntry.Properties["homeDirectory"].Value = Properties.homeDirectory;
                         uEntry.Properties["profilePath"].Value = Properties.profilePath;
-
 
                         uEntry.CommitChanges();
                         uEntry.Close();
